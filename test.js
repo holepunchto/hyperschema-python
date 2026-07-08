@@ -5,6 +5,8 @@ const path = require('path')
 const { spawnSync } = require('child_process')
 const PythonHyperschema = require('.')
 
+require('./test/skeleton.test.js')
+
 const FIXTURES_DIR = path.join(
   path.dirname(require.resolve('hyperschema-test/package')),
   'fixtures'
