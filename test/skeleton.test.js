@@ -11,7 +11,11 @@ function emptySchema() {
 function schemaWithStruct() {
   const hs = new PythonHyperschema(null, {})
   const ns = hs.namespace('ns')
-  ns.register({ name: 'item', fields: [{ name: 'id', type: 'uint', required: true }] })
+  ns.register({
+    name: 'item',
+    compact: true,
+    fields: [{ name: 'id', type: 'uint', required: true }]
+  })
   return hs
 }
 
@@ -22,7 +26,7 @@ test('empty schema emits header + resolve', (t) => {
   t.ok(code.includes('def resolve(name):'))
 })
 
-test('a declared struct is unsupported until its emitter lands', (t) => {
+test('a compact struct is unsupported', (t) => {
   try {
     schemaWithStruct().toCode()
     t.fail('expected UNSUPPORTED_TYPE')
