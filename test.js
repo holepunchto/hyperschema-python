@@ -15,7 +15,7 @@ const PYTHON = process.env.HYPERSCHEMA_PYTHON || path.join(__dirname, '.venv', '
 const RUNNER = path.join(__dirname, 'test', 'runner.py')
 
 // Fixtures this cut is expected to cover end to end.
-const EXPECTED = ['1', '5', '11', '14', '16', '32', '21', '22']
+const EXPECTED = ['1', '5', '11', '14', '16', '32', '21', '22', '3', '27', '28']
 
 function canonical(v) {
   if (Array.isArray(v)) return v.map(canonical)
