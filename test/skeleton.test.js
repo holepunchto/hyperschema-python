@@ -14,6 +14,17 @@ function schemaWithStruct() {
   ns.register({
     name: 'item',
     compact: true,
+    fields: [{ name: 'id', type: 'uint', required: false }]
+  })
+  return hs
+}
+
+function compactStructAllRequired() {
+  const hs = new PythonHyperschema(null, {})
+  const ns = hs.namespace('ns')
+  ns.register({
+    name: 'item',
+    compact: true,
     fields: [{ name: 'id', type: 'uint', required: true }]
   })
   return hs
@@ -26,13 +37,20 @@ test('empty schema emits header + resolve', (t) => {
   t.ok(code.includes('def resolve(name):'))
 })
 
-test('a compact struct is unsupported', (t) => {
+test('a compact struct with optional fields is unsupported', (t) => {
   try {
     schemaWithStruct().toCode()
     t.fail('expected UNSUPPORTED_TYPE')
   } catch (err) {
     t.is(err.code, 'UNSUPPORTED_TYPE')
   }
+})
+
+test('a compact struct with only required fields generates a codec', (t) => {
+  const code = compactStructAllRequired().toCode()
+  t.ok(code.includes('class _Encoding0(c.Codec)'), 'emits a struct codec')
+  t.ok(code.includes('c.uint'), 'encodes the required uint field')
+  t.absent(code.includes('flags ='), 'no flags word for a no-optional struct')
 })
 
 test('toDisk writes both files for an empty schema', (t) => {
