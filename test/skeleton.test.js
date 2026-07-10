@@ -85,13 +85,10 @@ test('a fixed field emits its codec', (t) => {
   t.ok(compactStructWithField('fixed32').toCode().includes('c.fixed32'))
 })
 
-test('a bool field is still unsupported (deferred)', (t) => {
-  try {
-    nonCompactStructWithBool().toCode()
-    t.fail('expected UNSUPPORTED_TYPE')
-  } catch (err) {
-    t.is(err.code, 'UNSUPPORTED_TYPE')
-  }
+test('a bool field generates a flag-bit codec', (t) => {
+  const code = nonCompactStructWithBool().toCode()
+  t.ok(code.includes('bool(flags &'), 'decode reads the bool from the flags word')
+  t.absent(code.includes('c.bool'), 'no separate codec byte for a bool field')
 })
 
 test('toDisk writes both files for an empty schema', (t) => {
