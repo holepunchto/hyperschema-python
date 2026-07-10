@@ -8,13 +8,12 @@ function emptySchema() {
   return new PythonHyperschema(null, {})
 }
 
-function schemaWithStruct() {
+function schemaThatThrows() {
   const hs = new PythonHyperschema(null, {})
-  const ns = hs.namespace('ns')
-  ns.register({
-    name: 'item',
-    compact: true,
-    fields: [{ name: 'id', type: 'uint', required: false }]
+  hs.namespace('ns').register({
+    name: 'bad',
+    compact: false,
+    fields: [{ name: 'xs', array: true, type: 'uint' }]
   })
   return hs
 }
@@ -145,15 +144,6 @@ test('empty schema emits header + resolve', (t) => {
   t.ok(code.includes('def resolve(name):'))
 })
 
-test('a compact struct with optional fields is unsupported', (t) => {
-  try {
-    schemaWithStruct().toCode()
-    t.fail('expected UNSUPPORTED_TYPE')
-  } catch (err) {
-    t.is(err.code, 'UNSUPPORTED_TYPE')
-  }
-})
-
 test('a compact struct with only required fields generates a codec', (t) => {
   const code = compactStructAllRequired().toCode()
   t.ok(code.includes('class _Encoding0(c.Codec)'), 'emits a struct codec')
@@ -227,6 +217,26 @@ test('a top-level record with a compact-struct value emits an inline value', (t)
   t.absent(code.includes('c.record(c.string, c.frame'), 'compact-struct value is not framed')
 })
 
+test('a compact struct with optional fields sizes the flags word (uint8)', (t) => {
+  const hs = new PythonHyperschema(null, {})
+  hs.namespace('ns').register({
+    name: 'flag',
+    compact: true,
+    fields: [{ name: 'value', type: 'bool', required: false }]
+  })
+  const code = hs.toCode()
+  t.ok(code.includes('c.uint8'), 'compact flags word is size-fitted to c.uint8')
+})
+
+test('a compact struct with 9 optional fields sizes the flags word (uint16)', (t) => {
+  const hs = new PythonHyperschema(null, {})
+  const fields = []
+  for (let i = 0; i < 9; i++) fields.push({ name: 'f' + i, type: 'uint', required: false })
+  hs.namespace('ns').register({ name: 'wide', compact: true, fields })
+  const code = hs.toCode()
+  t.ok(code.includes('c.uint16'), 'maxFlag 256 sizes the compact flags word to c.uint16')
+})
+
 test('toDisk writes both files for an empty schema', (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsp-'))
   PythonHyperschema.toDisk(emptySchema(), dir)
@@ -237,7 +247,7 @@ test('toDisk writes both files for an empty schema', (t) => {
 test('toDisk writes nothing when generation throws', (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hsp-'))
   try {
-    PythonHyperschema.toDisk(schemaWithStruct(), dir)
+    PythonHyperschema.toDisk(schemaThatThrows(), dir)
     t.fail('expected throw')
   } catch (err) {
     t.is(err.code, 'UNSUPPORTED_TYPE')
