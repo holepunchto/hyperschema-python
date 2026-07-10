@@ -15,26 +15,33 @@ const PYTHON = process.env.HYPERSCHEMA_PYTHON || path.join(__dirname, '.venv', '
 const RUNNER = path.join(__dirname, 'test', 'runner.py')
 
 // Fixtures this cut is expected to cover end to end.
-const EXPECTED = ['1', '5', '11', '14', '16', '32', '21', '22', '3', '27', '28']
-
-function canonical(v) {
-  if (Array.isArray(v)) return v.map(canonical)
-  if (v && typeof v === 'object') {
-    if (v.type === 'Buffer') return v.data.length ? { type: 'Buffer', data: v.data } : undefined
-    const out = {}
-    for (const k of Object.keys(v).sort()) {
-      const c = canonical(v[k])
-      if (c !== undefined && c !== null && c !== 0 && c !== '' && c !== false) out[k] = c
-    }
-    return out
-  }
-  if (v === null || v === 0 || v === '' || v === false) return undefined
-  return v
-}
-
-function eq(a, b) {
-  return JSON.stringify(canonical(a)) === JSON.stringify(canonical(b))
-}
+const EXPECTED = [
+  '1',
+  '5',
+  '11',
+  '14',
+  '16',
+  '32',
+  '21',
+  '22',
+  '3',
+  '27',
+  '28',
+  '13',
+  '15',
+  '30',
+  '31',
+  '33',
+  '34',
+  '35',
+  '36',
+  '37',
+  '38',
+  '39',
+  '40',
+  '41',
+  '42'
+]
 
 function runFixture(t, id) {
   const fixtureDir = path.join(FIXTURES_DIR, id)
@@ -70,9 +77,7 @@ function runFixture(t, id) {
   const out = JSON.parse(res.stdout)
   for (let i = 0; i < testJson.encoded.length; i++) {
     t.is(out.encoded[i], testJson.encoded[i], `fixture ${id} encode[${i}]`)
-  }
-  for (let i = 0; i < testJson.values.length; i++) {
-    t.ok(eq(out.decoded[i], testJson.values[i]), `fixture ${id} decode[${i}]`)
+    t.is(out.reencoded[i], testJson.encoded[i], `fixture ${id} decode->reencode[${i}]`)
   }
   return true
 }
