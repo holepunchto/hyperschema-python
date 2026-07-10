@@ -40,7 +40,10 @@ const EXPECTED = [
   '39',
   '40',
   '41',
-  '42'
+  '42',
+  '4',
+  '17',
+  '18'
 ]
 
 function runFixture(t, id) {
@@ -65,19 +68,23 @@ function runFixture(t, id) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), `hsp-${id}-`))
   fs.writeFileSync(path.join(dir, 'schema.py'), code)
 
+  const encodedHex = testJson.encoded.map((e) =>
+    typeof e === 'string' ? e : Buffer.from(e.data).toString('hex')
+  )
+
   const input = JSON.stringify({
     name,
     values: testJson.values,
-    encoded: testJson.encoded
+    encoded: encodedHex
   })
   const res = spawnSync(PYTHON, [RUNNER, dir], { input, encoding: 'utf-8' })
   t.is(res.status, 0, `fixture ${id} runner exited 0\n${res.stderr}`)
   if (res.status !== 0) return true
 
   const out = JSON.parse(res.stdout)
-  for (let i = 0; i < testJson.encoded.length; i++) {
-    t.is(out.encoded[i], testJson.encoded[i], `fixture ${id} encode[${i}]`)
-    t.is(out.reencoded[i], testJson.encoded[i], `fixture ${id} decode->reencode[${i}]`)
+  for (let i = 0; i < encodedHex.length; i++) {
+    t.is(out.encoded[i], encodedHex[i], `fixture ${id} encode[${i}]`)
+    t.is(out.reencoded[i], encodedHex[i], `fixture ${id} decode->reencode[${i}]`)
   }
   return true
 }
