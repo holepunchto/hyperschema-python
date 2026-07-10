@@ -54,7 +54,8 @@ const EXPECTED = [
   '23',
   '24',
   '29',
-  '20'
+  '20',
+  '26'
 ]
 
 function runFixture(t, id) {
