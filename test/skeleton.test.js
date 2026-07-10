@@ -85,6 +85,10 @@ test('a fixed field emits its codec', (t) => {
   t.ok(compactStructWithField('fixed32').toCode().includes('c.fixed32'))
 })
 
+test('a json field emits its codec', (t) => {
+  t.ok(compactStructWithField('json').toCode().includes('c.json'))
+})
+
 test('a bool field generates a flag-bit codec', (t) => {
   const code = nonCompactStructWithBool().toCode()
   t.ok(code.includes('bool(flags &'), 'decode reads the bool from the flags word')
