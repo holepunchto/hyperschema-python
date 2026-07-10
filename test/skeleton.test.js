@@ -10,11 +10,12 @@ function emptySchema() {
 
 function schemaThatThrows() {
   const hs = new PythonHyperschema(null, {})
-  hs.namespace('ns').register({
-    name: 'bad',
-    compact: false,
-    fields: [{ name: 'xs', array: true, type: 'uint' }]
-  })
+  const fields = []
+  // 57 optional fields -> flag bits up to 2**56 -> 64-bit flag word, which
+  // getByteSize rejects (no uint64 codec). Unsupported by design, so this
+  // helper keeps throwing UNSUPPORTED_TYPE across future slices.
+  for (let i = 0; i < 57; i++) fields.push({ name: 'f' + i, type: 'uint', required: false })
+  hs.namespace('ns').register({ name: 'toobig', compact: true, fields })
   return hs
 }
 
@@ -201,6 +202,18 @@ test('a top-level array of a compact struct emits an inline c.array', (t) => {
   const code = schemaWithArrayOfStruct().toCode()
   t.ok(/c\.array\(_encoding\d+\)/.test(code), 'array of compact struct emits c.array(_encoding..)')
   t.absent(code.includes('c.array(c.frame'), 'compact struct element is not framed')
+})
+
+test('a struct field that is an array emits c.array with is-not-None presence', (t) => {
+  const hs = new PythonHyperschema(null, {})
+  hs.namespace('ns').register({
+    name: 'holder',
+    compact: false,
+    fields: [{ name: 'xs', array: true, type: 'uint' }]
+  })
+  const code = hs.toCode()
+  t.ok(code.includes('c.array(c.uint)'), 'array field emits c.array(c.uint)')
+  t.ok(code.includes('m.get("xs") is not None'), 'array field presence is is-not-None')
 })
 
 test('a top-level record of primitives emits c.record', (t) => {
