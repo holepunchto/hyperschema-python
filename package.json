@@ -1,6 +1,6 @@
 {
   "name": "hyperschema-python",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Python code generation for Hyperschema",
   "exports": {
     "./package": "./package.json",
