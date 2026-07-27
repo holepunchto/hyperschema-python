@@ -19,4 +19,6 @@ The generated `schema.py` imports `compact_encoding` and exposes `resolve(name)`
 
 ### Scope
 
-This first cut supports flat non-compact structs and enums over the `uint`, `uint32`, `int`, `string`, and `buffer` primitives (plus enum-typed struct fields). Anything else raises `UNSUPPORTED_TYPE`.
+Generates codecs for these top-level constructs: structs (compact and non-compact, including optional fields), enums (numeric and string), arrays, records, versioned types, and aliases.
+
+Field types cover the `compact-encoding` primitives - `uint`, `uint32`, `int`, `string`, `buffer`, `json`, the sized integers (`uint8`-`uint56`, `int24`-`int56`), `float32`/`float64`, and `fixed32`/`fixed64` - plus nested structs/enums, arrays of those, and `bool` (encoded as a flags bit). Anything outside this set - an external type, or an unlisted primitive - raises `UNSUPPORTED_TYPE` rather than emitting broken Python.
